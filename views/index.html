@@ -3,7 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
+    
+    <link rel="shortcut icon" type="image/png" href="images/favicon.png"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="css/style.css" />
 
@@ -11,20 +12,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.1/knockout-min.js"></script>
+    <script src="lib/moment.min.js"></script>
+    <script src="lib/moment-timezone.min.js"></script>
 
     <script type="text/javascript" src="js/color.js"></script>
+    <script type="text/javascript" src="js/renderer.js"></script>
   </head>
   <body>
 
     <script type="text/javascript">
       $(document).ready(function() {
-        var model = new Color();
+        var model = new Color(new Renderer());
         ko.applyBindings(model);
       });
     </script>
 
+    <!--<div id="main" data-bind="style: {'background-color': backgroundColor}">-->
     <div id="main">
-      <h3 data-bind="text: currentTime"></h3>
+      <canvas id="theCanvas" data-bind="attr: {width: width, height: height}"></canvas>
+      <div class="content">
+        <h3 data-bind="text: currentTime" class="time"></h3>
+      </div>
     </div>
   </body>
 </html>
