@@ -15,7 +15,15 @@ app.get('/api/mapbounds', function(req, res) {
     res.send(JSON.stringify(data));
   });
 })
-
+app.get('/api/polygons/:zone', function(req, res) {
+  var zone = req.params.zone;
+  var fileName = __dirname + '/public/tz_json/polygons/' + zone + '.json';
+  fs.readFile(fileName, 'utf8', function(err, data) {
+    if (err) throw err;
+    res.setHeader('content-type', 'application/json');
+    res.send(JSON.stringify(data));
+  })
+})
 app.listen(3000, function() {
   console.log('color app listening on port 3000!');
 })

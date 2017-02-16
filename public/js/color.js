@@ -32,13 +32,48 @@ var Color = function(renderer) {
     fetch('/api/mapbounds').then(function(response) {
       if (response.ok) {
         response.json().then(function(json) {
-          createBounds();
+          var boundingBoxes = JSON.parse(json);
+          
+          var box = boundingBoxes[0];
+          var zones = box.zoneCentroids;
+          var zoneName = box.name.replace('/', '-');
+
+          fetch('/api/polygons/' + zoneName).then(function(response) {
+            if (response.ok) {
+              response.json().then(function(json) {
+                var data = JSON.parse(json);
+
+                var polygons = data.polygons;
+                var coords = [];
+                for (var i = 0; i < polygons.length; i++) {
+                  var polygon = polygons[i];
+                  // Loop through all the points in the polygon
+                  // Every 2 points are a lat & lon pair
+                  for (var j = 0; j < polygon.points.length; j += 2) {
+                    var point = polygon.points.slice(j, j + 2);
+                    coords.push(point);
+                  }
+                }
+
+                for (var i = 0; i < coords.length; i++) {
+                  var coord = coords[i];
+                  createGeoDot(coord[0], coord[1]);
+                }
+              });
+            }
+          });
+
+          // for (var key in zones) {
+          //   if (!zones.hasOwnProperty(key)) continue;
+          //   var zoneCoord = zones[key];
+          //   createGeoDot(zoneCoord[0], zoneCoord[1]);
+          // }
         });
       }
     });
   }
 
-  function createBounds() {
+  function createGeoDot(lat, lon) {
     var centerX = mercX(centerLon);
     var centerY = mercY(centerLat);
 

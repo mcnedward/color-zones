@@ -29,8 +29,10 @@
 
     <!--<div id="main" data-bind="style: {'background-color': backgroundColor}">-->
     <div id="main">
-      <canvas id="theCanvas" data-bind="attr: {width: width, height: height}"></canvas>
       <div class="content">
+        <canvas id="theCanvas" data-bind="attr: {width: width, height: height}"></canvas>
+      </div>
+      <div class="content" style="display: none">
         <h3 data-bind="text: currentTime" class="time"></h3>
       </div>
     </div>
