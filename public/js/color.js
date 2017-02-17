@@ -3,14 +3,16 @@ var Color = function(renderer) {
 
   const width = 1024, height = 512;
   const zoom = 1;
-  const centerLat = 0;
-  const centerLon = 0;
+  const centerLat = 20;
+  const centerLon = 10;
   const accessToken = "pk.eyJ1IjoiZWR3YXJkbWNuZWFseSIsImEiOiJjaXo3bmszcG0wMGZzMzNwZGd2d2szdmZqIn0.1ycNDtJkOf2K0bBa6tG04g";
   const mapUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v8/static/" + centerLon + "," + centerLat + "," + zoom + ",0,0/" + width + "x" + height +"?access_token=" + accessToken;
 
   // 27.269854, -82.460850 - Sarasota, FL
   var lat = 27.269854;
   var lon = -82.460850;
+  
+  var gmaps = google.maps;
 
   self.currentTime = ko.observable();
   self.backgroundColor = ko.observable();
@@ -51,14 +53,67 @@ var Color = function(renderer) {
                   // Every 2 points are a lat & lon pair
                   for (var j = 0; j < polygon.points.length; j += 2) {
                     var point = polygon.points.slice(j, j + 2);
-                    coords.push(point);
+                    var latLng = new LatLng(point[0], point[1]);
+                    coords.push(latLng);
                   }
                 }
 
+                // http://www.geeksforgeeks.org/convex-hull-set-2-graham-scan/
+                // Global point
+                var p0;
+
+                // The first step is to find the point P with the lowest latitude (y)
+                var minLatCoord = coords[0].lat, min = 0;
                 for (var i = 0; i < coords.length; i++) {
-                  var coord = coords[i];
-                  createGeoDot(coord[0], coord[1]);
+                  var lat = coords[i].lat;
+                  if ((lat < min) || (minLatCoord == lat && coords[i].lng < coords[min].lng)) {
+                    minLatCoord = coords[i].lat;
+                    min = i;
+                  }
                 }
+                var temp = coords[0];
+                coords[0] = minLatCoord;
+                coords[min] = temp;
+
+                p0 = coords[0];
+
+                // Next, sort the points in increasing order of the angle they and P make with the x-axis
+                coords.sort(function(a, b) {
+                  var slopeA = (a.lat - minLatCoord.lat) / (a.lng - minLatCoord.lng); 
+                  var slopeB = (b.lat - minLatCoord.lat) / (b.lng - minLatCoord.lng);
+                  return slopeA - slopeB;
+                });
+
+                function ccw(p1, p2, p3) {
+                  return (p2.lng - p1.lng) * (p3.lat - p1.lat) - (p2.lat - p1.lat) * (p3.lng - p1.lng);
+                }
+
+                var points = [];
+                var m = 1;
+                for (i = 1; i < coords.length; i++) {
+                  while (ccw(coords[m - 1], coords[m], coords[i]) <= 0) {
+                    // Made a right, or clockwise, turn, so remove the second-to-last point
+                    // coords.splice(m, 1);
+                    // i--;
+                    if (m > 1) {
+                      m--;
+                      continue;
+                    } else if (i == coords.length) {
+                      break;
+                    } else {
+                      i++;
+                    }
+                  }
+                  coords[m] = coords[i];
+                  m++;
+                  points.push(coords[m]);
+                }
+
+                createGeoPolygon(points);
+                // for (var i = 0; i < points.length; i++) {
+                //   createGeoDot(points[i].lat, points[i].lng);
+                // }
+
               });
             }
           });
@@ -73,6 +128,20 @@ var Color = function(renderer) {
     });
   }
 
+  function createGeoPolygon(points) {
+    var geoPoints = [];
+    for (var i = 0; i < points.length; i++) {
+      var centerX = mercX(centerLon);
+      var centerY = mercY(centerLat);
+
+      var x = mercX(points[i].lng) - centerX;
+      var y = mercY(points[i].lat) - centerY;
+
+      geoPoints.push({x: x, y: y});
+    }
+    renderer.polygon(geoPoints);
+  }
+
   function createGeoDot(lat, lon) {
     var centerX = mercX(centerLon);
     var centerY = mercY(centerLat);
@@ -80,7 +149,7 @@ var Color = function(renderer) {
     var x = mercX(lon) - centerX;
     var y = mercY(lat) - centerY;
 
-    renderer.ellipse(x, y, 5, 5);
+    renderer.ellipse(x, y, 3, 3);
   }
 
   function mercX(lon) {
