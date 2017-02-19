@@ -1,12 +1,10 @@
 var Color = function (renderer) {
   var self = this;
 
-  const width = 1024, height = 512;
+  const width = renderer.width(), height = renderer.height();
   const zoom = 1;
   const centerLat = 20;
   const centerLng = 10;
-  const accessToken = "pk.eyJ1IjoiZWR3YXJkbWNuZWFseSIsImEiOiJjaXo3bmszcG0wMGZzMzNwZGd2d2szdmZqIn0.1ycNDtJkOf2K0bBa6tG04g";
-  const mapUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v8/static/" + centerLng + "," + centerLat + "," + zoom + ",0,0/" + width + "x" + height + "?access_token=" + accessToken;
   const color = '#a01111';
   const gmaps = google.maps;
 
@@ -16,19 +14,49 @@ var Color = function (renderer) {
 
   var timeZones = [];
 
-  self.currentTime = ko.observable();
-  self.backgroundColor = ko.observable();
   self.width = ko.observable(width + 'px');
   self.height = ko.observable(height + 'px');
 
+  // Draw Loop
+  setInterval(() => {
+    if (timeZones.length == 0) return;
+
+    // Clear the canvas each frame
+    renderer.clear();
+    renderer.drawImageBackground();
+
+    // Trigger the intervals to draw all the zones
+    for (var i = 0; i < timeZones.length; i++) {
+      var timeZone = timeZones[i];
+
+      var current = moment().tz(timeZone.name);
+      var hours = adjustTime(current.hours());
+      var minutes = adjustTime(current.minutes());
+      var seconds = adjustTime(current.seconds());
+
+      var hex = hours + minutes + seconds;
+      var color = "#" + hex;
+      renderer.polygon(timeZone.coords, color);
+
+      var textX = timeZone.centroidPolygon.centroid.x;
+      var textY = timeZone.centroidPolygon.centroid.y;
+      renderer.text(textX, textY, current.format('HH:mm:ss'), '#ffffff', timeZone.centroidPolygon.id());
+    }
+  }, 1000);
+
   // Load the map image first
-  fetch(mapUrl).then(function (response) {
-    if (response.ok) {
-      renderer.drawImage(mapUrl, function () {
+  fetch('/api/map?centerLat=' + centerLat + '&centerLng=' + centerLng + '&zoom=' + zoom + '&width=' + width + '&height=' + height)
+  .then(function (response) {
+    if (!response.ok) {
+      // Handle error here
+      return;
+    }
+    response.text().then(function(mapUrl) {
+      renderer.loadImage(mapUrl, function () {
         // Map is rendered, so I can draw the bounds now
         loadRegions();
       });
-    }
+    })
   });
 
   function loadRegions() {
@@ -63,11 +91,6 @@ var Color = function (renderer) {
 
         // All time zones are loaded, so we can now load the bounding boxes
         loadBoundingBoxes();
-
-        // Trigger the intervals to draw all the zones
-        for (var i = 0; i < timeZones.length; i++) {
-          drawZone(timeZones[i]);
-        }
       })
     })
   }
@@ -109,52 +132,44 @@ var Color = function (renderer) {
       }
       response.json().then(function (json) {
         var data = JSON.parse(json);
-        var polygons = [];
-        var centroidIndex = 0, maxPoints = 0;
+        var polygons = {};
 
         for (var i = 0; i < data.polygons.length; i++) {
           // Loop through all the points in the polygon
           // Every 2 points are a lat & lng pair
-          var polygon = data.polygons[i];
-          var points = [];
+          var polygonData = data.polygons[i];
+          var coords = [];
 
-          for (var j = 0; j < polygon.points.length; j += 2) {
-            var point = polygon.points.slice(j, j + 2);
-            var xy = getXY(point[0], point[1]);
-            points.push(xy);
+          for (var j = 0; j < polygonData.points.length; j += 2) {
+            var coord = polygonData.points.slice(j, j + 2);
+            var xy = getXY(coord[0], coord[1]);
+            coords.push(xy);
           }
-          polygons.push(new Polygon(polygon.name, points, getXY(polygon.centroid[1], polygon.centroid[0])));
-
-          // Check to see if this polygon is the largest by seeing if it has the most edges
-          // Use the largest polygon's centroid as the timezone centroid
-          if (points.length > maxPoints) {
-            maxPoints = points.length;
-            centroidIndex = i;
+          
+          // Check if the polygon has already been created
+          var polygon = polygons[polygonData.name];
+          if (polygon) {
+            polygon.coords = polygon.coords.concat(coords);
+          } else {
+            polygon = new Polygon(polygonData.name, coords, getXY(polygonData.centroid[1], polygonData.centroid[0]));
+            polygons[polygonData.name] = polygon;
           }
         }
+
+        // Check to each polygon to find the largest by seeing if it has the most edges
+        // Use the largest polygon's centroid as the timezone centroid
+        var centroidName, maxPoints = 0;
+        $.each(polygons, function(index, value) {
+          if (value.coords.length > maxPoints) {
+            maxPoints = value.coords.length;
+            centroidName = value.name;
+          }
+        })
+
         timeZone.polygons = polygons;
-        timeZone.centroidPolygon = polygons[centroidIndex];
+        timeZone.centroidPolygon = polygons[centroidName];
       });
     });
-  }
-
-  function drawZone(timeZone) {
-    setInterval(() => {
-      var current = moment().tz(timeZone.name);
-      var hours = adjustTime(current.hours());
-      var minutes = adjustTime(current.minutes());
-      var seconds = adjustTime(current.seconds());
-
-      self.currentTime(current.format('HH:mm:ss'));
-
-      var hex = hours + minutes + seconds;
-      var color = "#" + hex;
-      
-      renderer.polygon(timeZone.coords, color);
-      var textX = timeZone.centroidPolygon.centroid.x;
-      var textY = timeZone.centroidPolygon.centroid.y;
-      renderer.text(textX, textY, current.format('HH:mm:ss'), '#ffffff', timeZone.centroidPolygon.id());
-    }, 1000);
   }
 
   function getXY(lat, lng) {
