@@ -10,8 +10,8 @@ var Renderer = function() {
   // TODO Make color a property here (observable?)
   // Then I can just set the color before calling a drawing function
 
-  // Loads a url into an image, draws that image to the canvas, then calls the callback function once everything is complete.
-  self.loadImage = function(url, callback) {
+  // Loads a url into an image then draws that image to the canvas
+  self.loadImage = function(url) {
     imageBackground = new Image();
     imageBackground.onload = function() {
       // Normally, 0,0 would be the top left of the canvas.
@@ -25,7 +25,6 @@ var Renderer = function() {
 
       context.translate(centerX, centerY);
       context.drawImage(imageBackground, (centerX) * -1, (centerY) * -1, width, height);
-      callback();
     };
     imageBackground.src = url;
   }
