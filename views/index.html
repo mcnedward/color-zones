@@ -19,6 +19,8 @@
     <script type="text/javascript" src="js/color.js"></script>
     <script type="text/javascript" src="js/renderer.js"></script>
     <script type="text/javascript" src="js/latLng.js"></script>
+    <script type="text/javascript" src="js/timeZone.js"></script>
+    <script type="text/javascript" src="js/polygon.js"></script>
   </head>
   <body>
 
@@ -31,11 +33,11 @@
 
     <!--<div id="main" data-bind="style: {'background-color': backgroundColor}">-->
     <div id="main">
-      <div class="content">
-        <canvas id="theCanvas" data-bind="attr: {width: width, height: height}"></canvas>
+      <div id="timeContainer" class="content">
+        <!--<h3 data-bind="text: currentTime" class="time"></h3>-->
       </div>
-      <div class="content" style="display: none">
-        <h3 data-bind="text: currentTime" class="time"></h3>
+      <div id="canvasContainer" class="content">
+        <canvas id="theCanvas" data-bind="attr: {width: width, height: height}"></canvas>
       </div>
     </div>
   </body>

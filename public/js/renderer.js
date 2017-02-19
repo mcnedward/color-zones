@@ -3,6 +3,7 @@ var Renderer = function() {
 
   var canvas = $('#theCanvas')[0];
   var context = canvas.getContext('2d');
+  var matrix = [1, 0, 0, 1, 0, 0];
 
   // TODO Make color a property here (observable?)
   // Then I can just set the color before calling a drawing function
@@ -15,6 +16,11 @@ var Renderer = function() {
       // I need to translate the canvas and the map image so that the center of the canvas is 0,0
       var centerX = canvas.width / 2;
       var centerY = canvas.height / 2;
+      
+      // Save the translate in the matrix
+      matrix[4] += matrix[0] * centerX + matrix[2] * centerY;
+      matrix[5] += matrix[1] * centerX + matrix[3] * centerY;
+
       context.translate(centerX, centerY);
       context.drawImage(image, (centerX) * -1, (centerY) * -1, 1024, 512);
       callback();
@@ -56,11 +62,41 @@ var Renderer = function() {
       self.polygon(separatePoints, color);
   }
 
+  self.text = function(x, y, text, color, id) {
+    var element = $('#' + id)
+    if (element[0] === undefined) {
+      element = jQuery('<span/>', {
+        id: id,
+        style: 'position: absolute; left: ' + x + 'px; top: ' + y + 'px; color: ' + color
+      }).appendTo('#timeContainer');
+    }
+    element.text(text);
+  }
+
   self.width = function() {
     return canvas.width;
   }
 
   self.height = function() {
     return canvas.height;
+  }
+  
+  self.addMouseOverEvent = function(event) {
+    canvas.addEventListener('mousemove', event, false);
+  }
+
+  self.getPosition = function(event) {
+    var rect = canvas.getBoundingClientRect();
+    
+    var x = (event.clientX * matrix[0] + event.clientY * matrix[2]) + matrix[4];
+    var y = (event.clientX * matrix[1] + event.clientY * matrix[3]) + matrix[5];
+    
+    // The canvas uses the center as it's (0, 0) point
+    var centerX = canvas.width / 2;
+    var centerY = canvas.height / 2;
+    return {
+      x: x,//event.clientX - centerX,
+      y: y//centerY - event.clientY
+    }
   }
 }

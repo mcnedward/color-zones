@@ -17,7 +17,7 @@ function fileResponse(req, res, fileName) {
     res.send(JSON.stringify(data));
   });
 }
-app.get('/api/mapbounds', function(req, res) {
+app.get('/api/map-bounds', function(req, res) {
   var fileName = __dirname + '/public/tz_json/bounding_boxes.json';
   fileResponse(req, res, fileName);
 })
