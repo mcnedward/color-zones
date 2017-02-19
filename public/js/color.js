@@ -1,17 +1,18 @@
-var Color = function(renderer) {
+var Color = function (renderer) {
   var self = this;
 
   const width = 1024, height = 512;
   const zoom = 1;
   const centerLat = 20;
-  const centerLon = 10;
+  const centerLng = 10;
   const accessToken = "pk.eyJ1IjoiZWR3YXJkbWNuZWFseSIsImEiOiJjaXo3bmszcG0wMGZzMzNwZGd2d2szdmZqIn0.1ycNDtJkOf2K0bBa6tG04g";
-  const mapUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v8/static/" + centerLon + "," + centerLat + "," + zoom + ",0,0/" + width + "x" + height +"?access_token=" + accessToken;
+  const mapUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v8/static/" + centerLng + "," + centerLat + "," + zoom + ",0,0/" + width + "x" + height + "?access_token=" + accessToken;
+  const color = '#a01111';
 
   // 27.269854, -82.460850 - Sarasota, FL
   var lat = 27.269854;
-  var lon = -82.460850;
-  
+  var lng = -82.460850;
+
   var gmaps = google.maps;
 
   self.currentTime = ko.observable();
@@ -20,142 +21,141 @@ var Color = function(renderer) {
   self.height = ko.observable(height + 'px');
 
   // Load the map image first
-  fetch(mapUrl).then(function(response) {
+  fetch(mapUrl).then(function (response) {
     if (response.ok) {
-      renderer.drawImage(mapUrl, function() {
+      renderer.drawImage(mapUrl, function () {
         // Map is rendered, so I can draw the bounds now
-        loadMapBounds();
+        loadRegions();
       });
     }
   });
 
+  function loadRegions() {
+    fetch('/api/hover-regions').then(function(response) {
+      if (!response.ok) {
+        // Handle error here
+        return;
+      }
+      response.json().then(function(json) {
+        var hoverRegions = JSON.parse(json);
+
+        for (var i = 0; i < hoverRegions.length; i++) {
+          var coords = getHoverRegionCoords(hoverRegions[i]);
+
+          createGeoPolygon(coords, color);
+        }
+
+        function getHoverRegionCoords(hoverRegion) {
+          // Each hover region contains a hover region array of points
+          var coords = [];
+          for (var i = 0; i < hoverRegion.hoverRegion.length; i++) {
+            // Every two points in the hover region are the lat and lng
+            var region = hoverRegion.hoverRegion[i];
+            for (var j = 0; j < region.points.length; j += 2) {
+              var pointPair = region.points.slice(j , j + 2);
+              var latLng = new LatLng(pointPair[0], pointPair[1]);
+              coords.push(latLng);  
+            }
+          }
+          return coords;
+        }
+      })
+    })
+  }
+
   // Load the map bounds
   function loadMapBounds() {
-    fetch('/api/mapbounds').then(function(response) {
+    fetch('/api/mapbounds').then(function (response) {
       if (response.ok) {
-        response.json().then(function(json) {
+        response.json().then(function (json) {
           var boundingBoxes = JSON.parse(json);
-          
-          var box = boundingBoxes[0];
-          var zones = box.zoneCentroids;
-          var zoneName = box.name.replace('/', '-');
 
-          fetch('/api/polygons/' + zoneName).then(function(response) {
-            if (response.ok) {
-              response.json().then(function(json) {
-                var data = JSON.parse(json);
+          for (var i = 0; i < 1; i++) {
+            var box = boundingBoxes[i];
+            var zoneName = box.name.replace(/\/|_/g, '-');
 
-                var polygons = data.polygons;
-                var coords = [];
-                for (var i = 0; i < polygons.length; i++) {
-                  var polygon = polygons[i];
-                  // Loop through all the points in the polygon
-                  // Every 2 points are a lat & lon pair
-                  for (var j = 0; j < polygon.points.length; j += 2) {
-                    var point = polygon.points.slice(j, j + 2);
-                    var latLng = new LatLng(point[0], point[1]);
-                    coords.push(latLng);
-                  }
-                }
+            fetch('/api/polygons/' + zoneName).then(function (response) {
+              if (response.ok) {
+                response.json().then(function (json) {
+                  var data = JSON.parse(json);
 
-                // http://www.geeksforgeeks.org/convex-hull-set-2-graham-scan/
-                // Global point
-                var p0;
-
-                // The first step is to find the point P with the lowest latitude (y)
-                var minLatCoord = coords[0].lat, min = 0;
-                for (var i = 0; i < coords.length; i++) {
-                  var lat = coords[i].lat;
-                  if ((lat < min) || (minLatCoord == lat && coords[i].lng < coords[min].lng)) {
-                    minLatCoord = coords[i].lat;
-                    min = i;
-                  }
-                }
-                var temp = coords[0];
-                coords[0] = minLatCoord;
-                coords[min] = temp;
-
-                p0 = coords[0];
-
-                // Next, sort the points in increasing order of the angle they and P make with the x-axis
-                coords.sort(function(a, b) {
-                  var slopeA = (a.lat - minLatCoord.lat) / (a.lng - minLatCoord.lng); 
-                  var slopeB = (b.lat - minLatCoord.lat) / (b.lng - minLatCoord.lng);
-                  return slopeA - slopeB;
-                });
-
-                function ccw(p1, p2, p3) {
-                  return (p2.lng - p1.lng) * (p3.lat - p1.lat) - (p2.lat - p1.lat) * (p3.lng - p1.lng);
-                }
-
-                var points = [];
-                var m = 1;
-                for (i = 1; i < coords.length; i++) {
-                  while (ccw(coords[m - 1], coords[m], coords[i]) <= 0) {
-                    // Made a right, or clockwise, turn, so remove the second-to-last point
-                    // coords.splice(m, 1);
-                    // i--;
-                    if (m > 1) {
-                      m--;
-                      continue;
-                    } else if (i == coords.length) {
-                      break;
-                    } else {
-                      i++;
+                  var polygons = data.polygons;
+                  var polygonPoints = [];
+                  for (var i = 0; i < polygons.length; i++) {
+                    // Loop through all the points in the polygon
+                    // Every 2 points are a lat & lng pair
+                    var polygon = polygons[i];
+                    var points = [];
+                    for (var j = 0; j < polygon.points.length; j += 2) {
+                      var point = polygon.points.slice(j, j + 2);
+                      var latLng = new LatLng(point[0], point[1]);
+                      polygonPoints.push(latLng);
                     }
                   }
-                  coords[m] = coords[i];
-                  m++;
-                  points.push(coords[m]);
-                }
-
-                createGeoPolygon(points);
-                // for (var i = 0; i < points.length; i++) {
-                //   createGeoDot(points[i].lat, points[i].lng);
-                // }
-
-              });
-            }
-          });
-
-          // for (var key in zones) {
-          //   if (!zones.hasOwnProperty(key)) continue;
-          //   var zoneCoord = zones[key];
-          //   createGeoDot(zoneCoord[0], zoneCoord[1]);
-          // }
+                });
+              }
+            });
+          }
         });
       }
     });
   }
 
-  function createGeoPolygon(points) {
+  function drawZones(points) {
+    var current = moment().tz('America/Los_Angeles');
+    var hours = adjustTime(current.hours());
+    var minutes = adjustTime(current.minutes());
+    var seconds = adjustTime(current.seconds());
+
+    self.currentTime(current.format('HH:mm:ss'));
+
+    var hex = (seconds * 10000) + (minutes * 100) + parseInt(hours);
+    var color = "#" + hex;
+    console.log(color)
+    createGeoPolygon(points, color);
+
+    setInterval(() => {
+      var current = moment().tz('America/Los_Angeles');
+      var hours = adjustTime(current.hours());
+      var minutes = adjustTime(current.minutes());
+      var seconds = adjustTime(current.seconds());
+
+      self.currentTime(current.format('HH:mm:ss'));
+
+      var hex = (seconds * 10000) + (minutes * 100) + hours;
+      var color = "#" + hex;
+      self.backgroundColor(color);
+    }, 1000);
+  }
+
+  function createGeoPolygon(points, color) {
     var geoPoints = [];
     for (var i = 0; i < points.length; i++) {
-      var centerX = mercX(centerLon);
+      var centerX = mercX(centerLng);
       var centerY = mercY(centerLat);
 
       var x = mercX(points[i].lng) - centerX;
       var y = mercY(points[i].lat) - centerY;
 
-      geoPoints.push({x: x, y: y});
+      geoPoints.push({ x: x, y: y });
     }
-    renderer.polygon(geoPoints);
+    renderer.polygon(geoPoints, color);
   }
 
-  function createGeoDot(lat, lon) {
-    var centerX = mercX(centerLon);
+  function createGeoDot(latLng, color) {
+    var centerX = mercX(centerLng);
     var centerY = mercY(centerLat);
 
-    var x = mercX(lon) - centerX;
-    var y = mercY(lat) - centerY;
+    var x = mercX(latLng.lng) - centerX;
+    var y = mercY(latLng.lat) - centerY;
 
-    renderer.ellipse(x, y, 3, 3);
+    renderer.ellipse(x, y, 3, 3, color);
   }
 
-  function mercX(lon) {
-    lon = toRadians(lon);
+  function mercX(lng) {
+    lng = toRadians(lng);
     var a = (256 / Math.PI) * Math.pow(2, zoom);
-    var b = lon + Math.PI;
+    var b = lng + Math.PI;
     return a * b;
   }
 
@@ -177,17 +177,4 @@ var Color = function(renderer) {
     }
     return interval;
   }
-  
-  setInterval(() => {
-    var current = moment().tz('America/Los_Angeles');
-    var hours = adjustTime(current.hours());
-    var minutes = adjustTime(current.minutes());
-    var seconds = adjustTime(current.seconds());
-
-    self.currentTime(current.format('HH:mm:ss'));
-
-    var hex = (seconds * 10000) + (minutes * 100) + hours;
-    var color = "#" + hex;
-    self.backgroundColor(color);
-  }, 1000);
 };
