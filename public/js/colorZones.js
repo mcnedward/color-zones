@@ -1,4 +1,4 @@
-var Color = function (renderer, timeZoneService) {
+var ColorZones = function (renderer, timeZoneService, colorPicker) {
   var self = this;
 
   const width = renderer.width(), height = renderer.height();
@@ -12,6 +12,7 @@ var Color = function (renderer, timeZoneService) {
   var lat = 27.269854;
   var lng = -82.460850;
 
+  self.colorPicker = ko.observable(colorPicker);
   self.timeZones = ko.observableArray();
   self.width = ko.observable(width + 'px');
   self.height = ko.observable(height + 'px');
@@ -55,6 +56,7 @@ var Color = function (renderer, timeZoneService) {
       renderer.loadImage(mapUrl);
     })
   });
+  
   // Load the time zones
   timeZoneService.setup(centerLat, centerLng, zoom);
   timeZoneService.loadTimeZones(function(errorMessage) {
@@ -68,14 +70,20 @@ var Color = function (renderer, timeZoneService) {
     return interval.toString();
   }
 
+  function getColorInterval(color, hours, minutes, seconds) {
+    
+  }
+
   renderer.addMouseOverEvent(function(event) {
+    if (self.timeZones().length === 0) return;
     var mousePosition = renderer.getPosition(event);
     var mouseX = mousePosition.x;
     var mouseY = mousePosition.y;
-    console.log('MouseX: ' + mouseX + ' MouseY: ' + mouseY);
+    // console.log('MouseX: ' + mouseX + ' MouseY: ' + mouseY);
     for (var i = 0; i < self.timeZones().length; i++) {
       var zone = self.timeZones()[i];
       var boundingBox = zone.boundingBox;
+      if (boundingBox === undefined) return;
       if (mouseY > boundingBox.xyMin.y && mouseY < boundingBox.xyMax.y && mouseX > boundingBox.xyMin.x && mouseX < boundingBox.xyMax.x) {
         // Mouse is in the zone bounds
         console.log('You are in the ' + zone.name + ' zone!');

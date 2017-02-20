@@ -6,16 +6,15 @@ body {
 }
 
 #main {
-  /*width: 100%;
+  width: 100%;
   height: 100%;
   position: absolute;
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  -o-background-size: cover;
-  background-size: cover;*/
 }
 #timeContainer {
-  z-index: 1000;
+  z-index: 1;
+}
+#colorControl {
+  z-index: 2;
 }
 .content {
   position: absolute;
@@ -25,4 +24,13 @@ body {
 }
 .time {
   color: white;
+}
+.btn {
+  cursor: pointer;
+}
+.btn:focus {
+  color: white;
+}
+.btn-time {
+  width: 100%;
 }

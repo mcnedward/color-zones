@@ -1,43 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    
-    <link rel="shortcut icon" type="image/png" href="images/favicon.png"/>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="shortcut icon" type="image/png" href="images/favicon.png" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+    crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="css/style.css" />
 
-    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.1/knockout-min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n"
+      crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb"
+      crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn"
+      crossorigin="anonymous"></script>
+    <script src="http://knockoutjs.com/downloads/knockout-3.4.1.debug.js"></script>
     <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
     <script src="lib/moment.min.js"></script>
     <script src="lib/moment-timezone.min.js"></script>
 
-    <script type="text/javascript" src="js/color.js"></script>
+    <script type="text/javascript" src="js/colorZones.js"></script>
+    <script type="text/javascript" src="js/colorPicker.js"></script>
     <script type="text/javascript" src="js/renderer.js"></script>
+    <script type="text/javascript" src="js/timeZoneService.js"></script>
     <script type="text/javascript" src="js/latLng.js"></script>
     <script type="text/javascript" src="js/timeZone.js"></script>
     <script type="text/javascript" src="js/polygon.js"></script>
-  </head>
-  <body>
+</head>
 
-    <script type="text/javascript">
-      $(document).ready(function() {
-        var model = new Color(new Renderer());
-        ko.applyBindings(model);
-      });
-    </script>
+<body>
 
-    <!--<div id="main" data-bind="style: {'background-color': backgroundColor}">-->
-    <div id="main">
-      <div id="timeContainer" class="content">
+  <script type="text/javascript">
+    $(document).ready(function () {
+      var model = new ColorZones(new Renderer(), new TimeZoneService(), new ColorPicker());
+      // Figure out why I need this override here...
+      ko.options.useOnlyNativeEvents = true;
+      ko.applyBindings(model);
+    });
+  </script>
+
+  <div id="main">
+    <div id="timeContainer" class="content">
       </div>
       <div id="canvasContainer" class="content">
         <canvas id="theCanvas" data-bind="attr: {width: width, height: height}"></canvas>
       </div>
-    </div>
-  </body>
+
+    <div id="colorControl" class="container-fluid text-uppercase" style="display: none;" data-bind="with: colorPicker, visible: true"
+     role="tablist" aria-multiselectable="true">
+      <div class="row">
+        <span class="col-sm-4">
+          <a data-toggle="collapse" class="btn btn-time" data-bind="css: hours"
+           data-parent="#colorControl" href="#hoursContainer" aria-expanded="true" aria-controls="hoursContainer">Hours</a>
+
+          <div id="hoursContainer" class="collapse" role="tabpanel">
+            <div class="card-block">
+              <button class="btn btn-danger btn-time mb-2" data-bind="click: update.bind($data, 'hours', 'red')">RED</button>
+              <button class="btn btn-success btn-time mb-2" data-bind="click: update.bind($data, 'hours', 'green')">GREEN</button>
+              <button class="btn btn-primary btn-time mb-2" data-bind="click: update.bind($data, 'hours', 'blue')">BLUE</button>
+            </div>
+          </div>
+        </span>
+
+        <span class="col-sm-4">
+          <a data-toggle="collapse" class="btn btn-time" data-bind="css: minutes"
+           data-parent="#colorControl" href="#minutesContainer" aria-expanded="true" aria-controls="minutesContainer">Minutes</a>
+
+          <div id="minutesContainer" class="collapse" role="tabpanel">
+            <div class="card-block">
+              <button class="btn btn-danger btn-time mb-2" data-bind="click: update.bind($data, 'minutes', 'red')">RED</button>
+              <button class="btn btn-success btn-time mb-2" data-bind="click: update.bind($data, 'minutes', 'green')">GREEN</button>
+              <button class="btn btn-primary btn-time mb-2" data-bind="click: update.bind($data, 'minutes', 'blue')">BLUE</button>
+            </div>
+          </div>
+        </span>
+
+        <span class="col-sm-4">
+          <a data-toggle="collapse" class="btn btn-time" data-bind="css: seconds"
+           data-parent="#colorControl" href="#secondsContainer" aria-expanded="true" aria-controls="secondsContainer">Seconds</a>
+
+          <div id="secondsContainer" class="collapse" role="tabpanel">
+            <div class="card-block">
+              <button class="btn btn-danger btn-time mb-2" data-bind="click: update.bind($data, 'seconds', 'red')">RED</button>
+              <button class="btn btn-success btn-time mb-2" data-bind="click: update.bind($data, 'seconds', 'green')">GREEN</button>
+              <button class="btn btn-primary btn-time mb-2" data-bind="click: update.bind($data, 'seconds', 'blue')">BLUE</button>
+            </div>
+          </div>
+        </span>
+      </div>
+  </div>
+</body>
+
 </html>
