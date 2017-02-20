@@ -4,18 +4,16 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
   const width = renderer.width(), height = renderer.height();
   const zoom = 1;
   const centerLat = 20;
-  const centerLng = 10;
+  const centerLng = 5;
   const color = '#a01111';
   const gmaps = google.maps;
-
-  // 27.269854, -82.460850 - Sarasota, FL
-  var lat = 27.269854;
-  var lng = -82.460850;
 
   self.colorPicker = ko.observable(colorPicker);
   self.timeZones = ko.observableArray();
   self.width = ko.observable(width + 'px');
   self.height = ko.observable(height + 'px');
+  self.opacity = ko.observable(80);
+  self.showTimes = ko.observable(true);
 
   // Draw Loop
   setInterval(() => {
@@ -26,7 +24,6 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
     renderer.drawImageBackground();
 
     var timeTexts = [];
-
     // Trigger the intervals to draw all the zones
     for (var i = 0; i < self.timeZones().length; i++) {
       var timeZone = self.timeZones()[i];
@@ -41,9 +38,9 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
       var blue = getColorInterval(colorPicker.blue, hours, minutes, seconds);
 
       var color = "#" + red + green + blue;
-      renderer.polygon(timeZone.coords, color);
+      renderer.polygon(timeZone.coords, color, self.opacity());
 
-      if (timeZone.centroidPolygon === undefined) return;
+      if (timeZone.centroidPolygon === undefined || !self.showTimes()) continue;
       timeTexts.push({
         textX: timeZone.centroidPolygon.centroid.x,
         textY: timeZone.centroidPolygon.centroid.y,
@@ -54,7 +51,7 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
     for (var i = 0; i < timeTexts.length; i++) {
       renderer.text(timeTexts[i].textX, timeTexts[i].textY, timeTexts[i].time, '#ffffff');
     }
-  }, 1000);
+  }, 100);
 
   // Load the map image
   fetch('/api/map?centerLat=' + centerLat + '&centerLng=' + centerLng + '&zoom=' + zoom + '&width=' + width + '&height=' + height)

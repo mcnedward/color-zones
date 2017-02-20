@@ -1,7 +1,7 @@
 var Renderer = function() {
   var self = this;
 
-  const width = 1024, height = 512;
+  const width = 1200, height = 700;
   var canvas = $('#theCanvas')[0];
   var context = canvas.getContext('2d');
   var imageBackground;
@@ -47,10 +47,10 @@ var Renderer = function() {
     context.fill();
   }
 
-  self.polygon = function(points, color) {
+  self.polygon = function(points, color, alpha) {
     var polygonPoints = points.slice(0);  // Need a copy of the points here
     context.beginPath();
-    color = convertHex(color, 98);
+    color = convertHex(color, alpha);
     context.fillStyle = color;
 
     var firstPoint = polygonPoints[0];

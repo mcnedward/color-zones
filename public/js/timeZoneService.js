@@ -1,5 +1,7 @@
-var TimeZoneService = function () {
+var TimeZoneService = function (mapWidth) {
   var self = this;
+
+  const mercUnits = mapWidth / 4;
 
   self.errorCallback = ko.observable();
   self.successCallback = ko.observable();
@@ -146,14 +148,14 @@ var TimeZoneService = function () {
 
     function mercX(lng) {
       lng = toRadians(lng);
-      var a = (256 / Math.PI) * Math.pow(2, self.zoom());
+      var a = (mercUnits / Math.PI) * Math.pow(2, self.zoom());
       var b = lng + Math.PI;
       return a * b;
     }
 
     function mercY(lat) {
       lat = toRadians(lat);
-      var a = (256 / Math.PI) * Math.pow(2, self.zoom());
+      var a = (mercUnits / Math.PI) * Math.pow(2, self.zoom());
       var b = Math.tan(Math.PI / 4 + lat / 2);
       var c = Math.PI - Math.log(b);
       return a * c;
