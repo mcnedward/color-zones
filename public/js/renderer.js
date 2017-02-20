@@ -6,30 +6,47 @@ var Renderer = function() {
   var context = canvas.getContext('2d');
   var imageBackground;
   var matrix = [1, 0, 0, 1, 0, 0];
+  var transformApplied = false;
 
   // TODO Make color a property here (observable?)
   // Then I can just set the color before calling a drawing function
 
+  self.renderFunction = ko.observable();
+
+  function render() {
+    requestAnimationFrame(render);
+    
+    // Clear the canvas each frame
+    clear();
+    drawImageBackground();
+
+    if (self.renderFunction())
+      self.renderFunction()();
+  }
+  render();
+
   // Loads a url into an image then draws that image to the canvas
   self.loadImage = function(url) {
-    imageBackground = new Image();
+    if (imageBackground === undefined)
+      imageBackground = new Image();
     imageBackground.onload = function() {
       // Normally, 0,0 would be the top left of the canvas.
       // I need to translate the canvas and the map image so that the center of the canvas is 0,0
       var centerX = canvas.width / 2;
       var centerY = canvas.height / 2;
-      
-      // Save the translate in the matrix
-      matrix[4] += matrix[0] * centerX + matrix[2] * centerY;
-      matrix[5] += matrix[1] * centerX + matrix[3] * centerY;
-
-      context.translate(centerX, centerY);
+      if (!transformApplied) {
+        // Save the translate in the matrix
+        matrix[4] += matrix[0] * centerX + matrix[2] * centerY;
+        matrix[5] += matrix[1] * centerX + matrix[3] * centerY;
+        context.translate(centerX, centerY);
+        transformApplied = true;
+      }
       context.drawImage(imageBackground, (centerX) * -1, (centerY) * -1, width, height);
     };
     imageBackground.src = url;
   }
 
-  self.drawImageBackground = function() {
+  function drawImageBackground() {
     if (!imageBackground) return;
     var centerX = canvas.width / 2;
     var centerY = canvas.height / 2;
@@ -39,7 +56,7 @@ var Renderer = function() {
   }
 
   self.ellipse = function(x, y, width, height, color) {
-    color = convertHex(color, 255);
+    color = convertHex(color, 100);
     context.beginPath();
     // Ellipse: void context.ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise);
     context.ellipse(x, y, width / 2, height / 2, 0, 2 * Math.PI, false);
@@ -81,7 +98,7 @@ var Renderer = function() {
     context.fillText(text, x, y);
   }
 
-  self.clear = function() {
+  function clear() {
     context.clearRect(0 - canvas.width / 2, 0 - canvas.height / 2, canvas.width, canvas.height);
   }
 
@@ -93,23 +110,31 @@ var Renderer = function() {
     return height;
   }
   
-  self.addMouseOverEvent = function(event) {
-    canvas.addEventListener('mousemove', event, false);
+  var _mouseOverEvent, _centerLat, _centerLng;
+  self.addMouseOverEvent = function(mouseOverEvent, centerLat, centerLng) {
+    _mouseOverEvent = mouseOverEvent;
+    _centerLat = centerLat;
+    _centerLng = _centerLng;
+    canvas.addEventListener('mousemove', function(event) {
+      var rect = canvas.getBoundingClientRect();
+      
+      // The canvas uses the center as its (0, 0) point
+      var centerX = canvas.width / 2;
+      var centerY = canvas.height / 2;
+
+      var x = event.clientX - centerX - centerLng;
+      var y = event.clientY - centerY - centerLat;
+      _mouseOverEvent(x, y);
+    }, false);
   }
 
-  self.getPosition = function(event) {
-    var rect = canvas.getBoundingClientRect();
-    
-    var x = (event.clientX * matrix[0] + event.clientY * matrix[2]) + matrix[4];
-    var y = (event.clientX * matrix[1] + event.clientY * matrix[3]) + matrix[5];
-    
-    // The canvas uses the center as it's (0, 0) point
-    var centerX = canvas.width / 2;
-    var centerY = canvas.height / 2;
-    return {
-      x: x,//event.clientX - centerX,
-      y: y//centerY - event.clientY
-    }
+  var _scrollCallback;
+  self.addMouseScrollEvent = function(callback) {
+    _scrollCallback = callback;
+    canvas.addEventListener('mousewheel', function() {
+     var wheel = event.wheelDelta / 120;
+     _scrollCallback(1 + wheel / 2);
+    }, false);
   }
 
   function convertHex(hex, alpha) {

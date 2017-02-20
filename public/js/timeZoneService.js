@@ -7,24 +7,26 @@ var TimeZoneService = function (mapWidth) {
   self.successCallback = ko.observable();
   // This is an observable that the caller passes in
   // It will be updated as the service finishes each of it's requests
-  self.timeZoneObservables;
-  self.centerLat = ko.observable();
-  self.centerLng = ko.observable();
-  self.zoom = ko.observable();
+  var _timeZoneObservables;
+  var _timeZoneRegionsObservable;
+  self.centerLat;
+  self.centerLng;
+  self.zoom;
 
   self.setup = function(centerLat, centerLng, zoom) {
-    self.centerLat(centerLat);
-    self.centerLng(centerLng);
-    self.zoom(zoom);
+    self.centerLat = centerLat;
+    self.centerLng = centerLng;
+    self.zoom = zoom;  // This needs to be an observable from ColorZones
   }
 
-  self.loadTimeZones = function (errorCallback, timeZonesObservable) {
+  self.loadTimeZones = function (errorCallback, _timeZoneObservables, timeZoneRegionsObservable) {
     if (self.centerLat() === undefined || self.centerLng() === undefined || self.zoom() === undefined) {
       errorCallback('You need to call TimeZoneService.setCenterCoordinates(centerLat, centerLng, zoom) first!');
       return;
     }
     self.errorCallback(errorCallback);
-    self.timeZonesObservable = timeZonesObservable
+    _timeZonesObservable = _timeZoneObservables;
+    _timeZoneRegionsObservable = timeZoneRegionsObservable;
 
     // Load the time zone regions
     fetch('/api/hover-regions').then(function (response) {
@@ -53,13 +55,23 @@ var TimeZoneService = function (mapWidth) {
         for (var i = 0; i < hoverRegions.length; i++) {
           var timeZone = getTimeZone(hoverRegions[i]);
           loadZonePolygons(timeZone);
-          timeZonesObservable().push(timeZone);
+          _timeZoneObservables().push(timeZone);
         }
 
         // All time zones are loaded, so we can now load the bounding boxes
         loadBoundingBoxes();
       })
     })
+
+    self.reloadCoordinates = function() {
+      console.log(self.zoom())
+      for (var i = 0; i < _timeZoneObservables().length; i++) {
+        var coords = _timeZoneObservables()[i].coords;
+        for (var j = 0; j < coords.length; j++) {
+          coords[j] = getXY(coords[j].x, coords[j].y);
+        }
+      }
+    }
 
     // Load the bounding boxes
     function loadBoundingBoxes() {
@@ -72,11 +84,11 @@ var TimeZoneService = function (mapWidth) {
           var boundingBoxes = JSON.parse(json);
           for (var i = 0; i < boundingBoxes.length; i++) {
             var box = boundingBoxes[i];
-            for (var j = 0; j < timeZonesObservable().length; j++) {
-              if (timeZonesObservable()[j].matchesId(box.name)) {
+            for (var j = 0; j < _timeZoneObservables().length; j++) {
+              if (_timeZoneObservables()[j].matchesId(box.name)) {
                 var xyMin = getXY(box.boundingBox.ymin, box.boundingBox.xmin);
                 var xyMax = getXY(box.boundingBox.ymax, box.boundingBox.xmax);
-                timeZonesObservable()[j].boundingBox = {
+                _timeZoneObservables()[j].boundingBox = {
                   xyMin: xyMin,
                   xyMax: xyMax
                 }
@@ -132,7 +144,10 @@ var TimeZoneService = function (mapWidth) {
             }
           })
 
-          timeZone.polygons = polygons;
+          if (!_timeZoneRegionsObservable()[timeZone.name]) {
+            _timeZoneRegionsObservable()[timeZone.name] = [];
+          }
+          _timeZoneRegionsObservable()[timeZone.name] = polygons;
           timeZone.centroidPolygon = polygons[centroidName];
         });
       });
