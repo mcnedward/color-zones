@@ -25,6 +25,8 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
     renderer.clear();
     renderer.drawImageBackground();
 
+    var timeTexts = [];
+
     // Trigger the intervals to draw all the zones
     for (var i = 0; i < self.timeZones().length; i++) {
       var timeZone = self.timeZones()[i];
@@ -34,14 +36,23 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
       var minutes = adjustTime(current.minutes());
       var seconds = adjustTime(current.seconds());
 
-      var hex = hours + minutes + seconds;
-      var color = "#" + hex;
+      var red = getColorInterval(colorPicker.red, hours, minutes, seconds);
+      var green = getColorInterval(colorPicker.green, hours, minutes, seconds);
+      var blue = getColorInterval(colorPicker.blue, hours, minutes, seconds);
+
+      var color = "#" + red + green + blue;
       renderer.polygon(timeZone.coords, color);
 
       if (timeZone.centroidPolygon === undefined) return;
-      var textX = timeZone.centroidPolygon.centroid.x;
-      var textY = timeZone.centroidPolygon.centroid.y;
-      renderer.text(textX, textY, current.format('HH:mm:ss'), '#ffffff', timeZone.centroidPolygon.id());
+      timeTexts.push({
+        textX: timeZone.centroidPolygon.centroid.x,
+        textY: timeZone.centroidPolygon.centroid.y,
+        time: current.format('HH:mm:ss')
+      });
+    }
+    // Need to do this in a separate loop here to have the times drawn on top
+    for (var i = 0; i < timeTexts.length; i++) {
+      renderer.text(timeTexts[i].textX, timeTexts[i].textY, timeTexts[i].time, '#ffffff');
     }
   }, 1000);
 
@@ -71,7 +82,17 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
   }
 
   function getColorInterval(color, hours, minutes, seconds) {
-    
+    var interval = colorPicker.colors()[color].interval;
+    switch (interval) {
+      case colorPicker.hours:
+        return hours;
+      case colorPicker.minutes:
+        return minutes;
+      case colorPicker.seconds:
+        return seconds;
+      default:
+        console.log('Could not find an interval for: ' + interval + '...');
+    }
   }
 
   renderer.addMouseOverEvent(function(event) {

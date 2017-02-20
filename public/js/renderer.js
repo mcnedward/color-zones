@@ -75,15 +75,10 @@ var Renderer = function() {
       self.polygon(separatePoints, color);
   }
 
-  self.text = function(x, y, text, color, id) {
-    var element = $('#' + id)
-    if (element[0] === undefined) {
-      element = jQuery('<span/>', {
-        id: id,
-        style: 'position: absolute; left: ' + x + 'px; top: ' + y + 'px; color: ' + color
-      }).appendTo('#timeContainer');
-    }
-    element.text(text);
+  self.text = function(x, y, text, color) {
+    context.font = '16px Segoe UI';
+    context.fillStyle = color;
+    context.fillText(text, x, y);
   }
 
   self.clear = function() {

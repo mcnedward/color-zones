@@ -4,26 +4,13 @@ html {
 body {
   min-height: 100%;
 }
-
 #main {
   width: 100%;
   height: 100%;
   position: absolute;
 }
-#timeContainer {
-  z-index: 1;
-}
 #colorControl {
-  z-index: 2;
-}
-.content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translateX(-50%) translateY(-50%);
-}
-.time {
-  color: white;
+  max-width: 1024px;
 }
 .btn {
   cursor: pointer;
@@ -31,6 +18,6 @@ body {
 .btn:focus {
   color: white;
 }
-.btn-time {
-  width: 100%;
+.card-block {
+  padding: 0;
 }
