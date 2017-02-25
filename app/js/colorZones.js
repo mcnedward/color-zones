@@ -2,25 +2,29 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
   var self = this;
 
   const width = renderer.width(), height = renderer.height();
-  const color = '#a01111';
-  const textColor = 'white';
   const hoverZoneColor = '#660d60';
   const timeFormat = 'HH:mm:ss';
-
-  var _hoverTimeZoneKey;
-  var _selectedTimeText;
+  var _hoverTimeZoneKey, _hoverRegionKey;
+  var _selectedZoneInfo;
   var _mouseX, _mouseY;
-
-  self.timeZones = ko.observableArray();
-  self.timeZoneRegions = ko.observable({});
-  self.width = ko.observable(width + 'px');
-  self.height = ko.observable(height + 'px');
+  // UI options
   self.colorPicker = ko.observable(colorPicker);
   self.opacity = ko.observable(80);
-  self.showTimes = ko.observable(true);
+  self.showTimes = ko.observable(false);
+  self.colorAllZones = ko.observable(true);
+  // Map options
+  self.width = ko.observable(width + 'px');
+  self.height = ko.observable(height + 'px');
   self.zoom = ko.observable(1);
   self.centerLat = ko.observable(0);
   self.centerLng = ko.observable(0);
+  // Cached zones and regions
+  self.timeZones = ko.observableArray();
+  self.timeZoneRegions = ko.observable({});
+
+  var _textColor = ko.pureComputed(function() {
+    return self.colorAllZones() ? 'white' : 'black';
+  });
 
   // Draw Loop
   renderer.renderFunction(function() {
@@ -41,17 +45,20 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
       var blue = getColorInterval(colorPicker.blue, hours, minutes, seconds);
 
       var color = "#" + red + green + blue;
-      renderer.polygon(timeZone.coords, color, self.opacity());
+      if (self.colorAllZones()) {
+        renderer.polygon(timeZone.coords, color, self.opacity());
+      }
 
       if (timeZone.centroidPolygon === undefined) continue;
-      var timeText = {
+      var zoneInfo = {
         textX: timeZone.centroidPolygon.centroid.x,
         textY: timeZone.centroidPolygon.centroid.y,
-        time: current.format(timeFormat)
+        time: current.format(timeFormat),
+        colorHex: color
       };
-      timeTexts.push(timeText);
+      timeTexts.push(zoneInfo);
       if (_hoverTimeZoneKey && _hoverTimeZoneKey !== '' && _hoverTimeZoneKey === timeZone.name) {
-        _selectedTimeText = timeText;
+        _selectedZoneInfo = zoneInfo;
       }
     }
 
@@ -59,17 +66,22 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
     if (hoverTimeZone) {
       $.each(hoverTimeZone, function(index, value) {
         if (!value || !value.coords || value.coords.length === 0) return;
-        renderer.polygon(value.coords, hoverZoneColor, 80);
+        // Use the color-zone hex when only coloring the hover region
+        var hoverColor = self.colorAllZones() ? hoverZoneColor : _selectedZoneInfo.colorHex;
+        renderer.polygon(value.coords, hoverColor, 80);
       });
+
       if (!self.showTimes()) {
-        renderer.text(_mouseX - 30, _mouseY - 5, _selectedTimeText.time, textColor);
+        renderer.text(_mouseX, _mouseY - 5, _selectedZoneInfo.time, _textColor(), true);
       }
+      renderer.text(_mouseX, _mouseY - 25, _hoverRegionKey, _textColor(), true);
+      renderer.text(_mouseX, _mouseY - 45, _selectedZoneInfo.colorHex, _textColor(), true);
     }
 
     // Need to do this in a separate loop here to have the times drawn on top
     if (!self.showTimes()) return;
     for (var j = 0; j < timeTexts.length; j++) {
-      renderer.text(timeTexts[j].textX, timeTexts[j].textY, timeTexts[j].time, textColor);
+      renderer.text(timeTexts[j].textX, timeTexts[j].textY, timeTexts[j].time, _textColor());
     }
   });
 
@@ -119,8 +131,7 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
     }
   }
 
-  function rayCastTest(region, x, y, zoneName) {
-    var points = region.coords;
+  function rayCastTest(points, x, y, zoneName) {
     var rayTest = 0;
     var lastPoint = points[points.length - 1];
 
@@ -129,7 +140,7 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
 
       if ((lastPoint.y <= y && point.y >= y) || 
           (lastPoint.y > y && point.y < y)) {
-        var slope = (point.x - lastPoint.x) / (point.y / lastPoint.y);
+        var slope = (point.x - lastPoint.x) / (point.y - lastPoint.y);
         var testPoint = slope * (y - lastPoint.y) + lastPoint.x;
         if (testPoint < x) {
           rayTest++;
@@ -143,6 +154,8 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
 
   renderer.addMouseOverEvent(function(x, y) {
     if (self.timeZones().length === 0) return;
+
+    var found = false;
     for (var i = 0; i < self.timeZones().length; i++) {
       var zone = self.timeZones()[i];
       var boundingBox = zone.boundingBox;
@@ -155,10 +168,12 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
         var regions = self.timeZoneRegions()[zone.name];
         for (var key in regions) {
           if (!regions.hasOwnProperty(key)) continue;
-          if (rayCastTest(regions[key], x, y)) {
+          if (rayCastTest(regions[key].coords, x, y)) {
             _hoverTimeZoneKey = zone.name;
+            _hoverRegionKey = key;
             _mouseX = x;
             _mouseY = y;
+            return;
           }
         }
       }

@@ -92,9 +92,13 @@ function Renderer() {
       self.polygon(separatePoints, color);
   };
 
-  self.text = function(x, y, text, color) {
-    context.font = '16px Segoe UI';
+  self.text = function(x, y, text, color, centerText) {
+    context.font = 'bold 16px Segoe UI';
     context.fillStyle = color;
+    if (centerText) {
+      var metrics = context.measureText(text);
+      x -= metrics.width / 2;
+    }
     context.fillText(text, x, y);
   };
 

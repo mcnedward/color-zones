@@ -8,6 +8,10 @@ app.use(express.static('views'));
 var scriptDir;
 if (environment === 'dev') {
   scriptDir = '/app';
+  // This probably shouldn't be part of production
+  app.use('/tz_json', express.static(__dirname + '/tz_json'));
+  // Should this lib folder?
+  app.use('/js', express.static(__dirname + '/public/lib'));
 } else if (environment === 'production') {
   scriptDir = '/public';
 }
