@@ -114,16 +114,16 @@ var Renderer = function() {
   self.addMouseOverEvent = function(mouseOverEvent, centerLat, centerLng) {
     _mouseOverEvent = mouseOverEvent;
     _centerLat = centerLat;
-    _centerLng = _centerLng;
+    _centerLng = centerLng;
     canvas.addEventListener('mousemove', function(event) {
       var rect = canvas.getBoundingClientRect();
       
       // The canvas uses the center as its (0, 0) point
       var centerX = canvas.width / 2;
       var centerY = canvas.height / 2;
-
-      var x = event.clientX - centerX - centerLng;
-      var y = event.clientY - centerY - centerLat;
+      
+      var x = event.clientX - rect.left - centerX;
+      var y = event.clientY - rect.top - centerY;
       _mouseOverEvent(x, y);
     }, false);
   }

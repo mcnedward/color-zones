@@ -13,10 +13,11 @@ var TimeZoneService = function (mapWidth) {
   self.centerLng;
   self.zoom;
 
+  // These need to be observables from ColorZones
   self.setup = function(centerLat, centerLng, zoom) {
     self.centerLat = centerLat;
     self.centerLng = centerLng;
-    self.zoom = zoom;  // This needs to be an observable from ColorZones
+    self.zoom = zoom;
   }
 
   self.loadTimeZones = function (errorCallback, _timeZoneObservables, timeZoneRegionsObservable) {
@@ -152,32 +153,32 @@ var TimeZoneService = function (mapWidth) {
         });
       });
     }
+  }
 
-    function getXY(lat, lng) {
-      var centerX = mercX(self.centerLng());
-      var centerY = mercY(self.centerLat());
-      var x = mercX(lng) - centerX;
-      var y = mercY(lat) - centerY;
-      return { x: x, y: y };
-    }
+  function getXY(lat, lng) {
+    var centerX = mercX(self.centerLng());
+    var centerY = mercY(self.centerLat());
+    var x = mercX(lng) - centerX;
+    var y = mercY(lat) - centerY;
+    return { x: x, y: y };
+  }
 
-    function mercX(lng) {
-      lng = toRadians(lng);
-      var a = (mercUnits / Math.PI) * Math.pow(2, self.zoom());
-      var b = lng + Math.PI;
-      return a * b;
-    }
+  function mercX(lng) {
+    lng = toRadians(lng);
+    var a = (mercUnits / Math.PI) * Math.pow(2, self.zoom());
+    var b = lng + Math.PI;
+    return a * b;
+  }
 
-    function mercY(lat) {
-      lat = toRadians(lat);
-      var a = (mercUnits / Math.PI) * Math.pow(2, self.zoom());
-      var b = Math.tan(Math.PI / 4 + lat / 2);
-      var c = Math.PI - Math.log(b);
-      return a * c;
-    }
+  function mercY(lat) {
+    lat = toRadians(lat);
+    var a = (mercUnits / Math.PI) * Math.pow(2, self.zoom());
+    var b = Math.tan(Math.PI / 4 + lat / 2);
+    var c = Math.PI - Math.log(b);
+    return a * c;
+  }
 
-    function toRadians(degrees) {
-      return degrees * (Math.PI / 180);
-    }
+  function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
   }
 }

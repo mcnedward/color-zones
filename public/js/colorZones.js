@@ -3,11 +3,13 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
 
   const width = renderer.width(), height = renderer.height();
   const color = '#a01111';
-  const gmaps = google.maps;
   const textColor = 'white';
+  const hoverZoneColor = '#660d60';
+  const timeFormat = 'HH:mm:ss';
 
   var _hoverTimeZoneKey;
   var _selectedTimeText;
+  var _mouseX, _mouseY;
 
   self.timeZones = ko.observableArray();
   self.timeZoneRegions = ko.observable({});
@@ -17,8 +19,8 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
   self.opacity = ko.observable(80);
   self.showTimes = ko.observable(true);
   self.zoom = ko.observable(1);
-  self.centerLat = ko.observable(20);
-  self.centerLng = ko.observable(5);
+  self.centerLat = ko.observable(0);
+  self.centerLng = ko.observable(0);
 
   // Draw Loop
   renderer.renderFunction(function() {
@@ -45,7 +47,7 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
       var timeText = {
         textX: timeZone.centroidPolygon.centroid.x,
         textY: timeZone.centroidPolygon.centroid.y,
-        time: current.format('HH:mm:ss')
+        time: current.format(timeFormat)
       };
       timeTexts.push(timeText);
       if (_hoverTimeZoneKey && _hoverTimeZoneKey !== '' && _hoverTimeZoneKey === timeZone.name) {
@@ -57,10 +59,13 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
     if (hoverTimeZone) {
       $.each(hoverTimeZone, function(index, value) {
         if (!value || !value.coords || value.coords.length === 0) return;
-        renderer.polygon(value.coords, '#a01111', 100);
+        renderer.polygon(value.coords, hoverZoneColor, 80);
       });
-      renderer.text(_selectedTimeText.textX, _selectedTimeText.textY, _selectedTimeText.time, textColor);
+      if (!self.showTimes()) {
+        renderer.text(_mouseX - 30, _mouseY - 5, _selectedTimeText.time, textColor);
+      }
     }
+
     // Need to do this in a separate loop here to have the times drawn on top
     if (!self.showTimes()) return;
     for (var i = 0; i < timeTexts.length; i++) {
@@ -116,18 +121,43 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
 
   renderer.addMouseOverEvent(function(x, y) {
     if (self.timeZones().length === 0) return;
-    // console.log('MouseX: ' + x + ' MouseY: ' + y);
     for (var i = 0; i < self.timeZones().length; i++) {
       var zone = self.timeZones()[i];
       var boundingBox = zone.boundingBox;
       if (boundingBox === undefined) return;
 
-      if (y > boundingBox.xyMax.y && y < boundingBox.xyMin.y && x > boundingBox.xyMin.x && x < boundingBox.xyMax.x) {
-        // Mouse is in the zone bounds
-        _hoverTimeZoneKey = zone.name;
-        return;
+      // Source: https://github.com/dosx/timezone-picker
+      if (y > boundingBox.xyMax.y && y < boundingBox.xyMin.y &&
+          x > boundingBox.xyMin.x && x < boundingBox.xyMax.x) {
+        // Mouse is in the zone bounds, so now have to check if it is in one of this zone's regions
+        var regions = self.timeZoneRegions()[zone.name];
+        $.each(regions, function(i, region) {
+          var points = region.coords;
+          var rayTest = 0;
+          var lastPoint = points[points.length - 1];
+
+          for (var j = 0; j < points.length; j++) {
+            var point = points[j];
+
+            if ((lastPoint.y <= y && point.y >= y) || 
+                (lastPoint.y > y && point.y < y)) {
+              var slope = (point.x - lastPoint.x) / (point.y / lastPoint.y);
+              var testPoint = slope * (y - lastPoint.y) + lastPoint.x;
+              if (testPoint < x) {
+                rayTest++;
+              }
+            }
+            lastPoint = point;
+          }
+          // If the count is odd, we are in the polygon
+          var odd = (rayTest % 2 === 1);
+          if (odd) {
+            _hoverTimeZoneKey = zone.name;
+            _mouseX = x;
+            _mouseY = y;
+          }
+        })
       }
-      _hoverTimeZoneKey = '';
     }
   }, self.centerLat(), self.centerLng());
 
