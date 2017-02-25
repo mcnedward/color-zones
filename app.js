@@ -1,10 +1,26 @@
 var express = require('express');
 var app = express();
-var fs = require("fs");
+var fs = require('fs');
+const environment = 'dev';
 
 app.use(express.static('views'));
-app.use(express.static(__dirname + '/public'));
-app.use(express.static('tz_json'));
+// App
+var scriptDir;
+if (environment === 'dev') {
+  scriptDir = '/app';
+} else if (environment === 'production') {
+  scriptDir = '/public';
+}
+app.use('/js', express.static(__dirname + '/' + scriptDir + '/js'));
+app.use('/css', express.static(__dirname + '/public/css'));
+// Modules
+app.use('/js', express.static(__dirname + '/node_modules/tether/dist/js'));
+app.use('/js', express.static(__dirname + '/node_modules/bootstrap/dist/js'));
+app.use('/js', express.static(__dirname + '/node_modules/jquery/dist'));
+app.use('/js', express.static(__dirname + '/node_modules/knockout/build/output'));
+app.use('/js', express.static(__dirname + '/node_modules/moment/min'));
+app.use('/js', express.static(__dirname + '/node_modules/moment-timezone/builds'));
+app.use('/css', express.static(__dirname + '/node_modules/bootstrap/dist/css')); 
 
 const mapboxAccessToken = "pk.eyJ1IjoiZWR3YXJkbWNuZWFseSIsImEiOiJjaXo3bmszcG0wMGZzMzNwZGd2d2szdmZqIn0.1ycNDtJkOf2K0bBa6tG04g";
 
@@ -30,16 +46,16 @@ app.get('/api/map', function(req, res) {
   res.send(mapUrl);
 })
 app.get('/api/map-bounds', function(req, res) {
-  var fileName = __dirname + '/public/tz_json/bounding_boxes.json';
+  var fileName = __dirname + '/tz_json/bounding_boxes.json';
   fileResponse(req, res, fileName);
 })
 app.get('/api/polygons/:zone', function(req, res) {
   var zone = req.params.zone;
-  var fileName = __dirname + '/public/tz_json/polygons/' + zone + '.json';
+  var fileName = __dirname + '/tz_json/polygons/' + zone + '.json';
   fileResponse(req, res, fileName);
 })
 app.get('/api/hover-regions', function(req, res) {
-  var fileName = __dirname + '/public/tz_json/hover_regions.json';
+  var fileName = __dirname + '/tz_json/hover_regions.json';
   fileResponse(req, res, fileName);
 })
 
