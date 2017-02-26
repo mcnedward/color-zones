@@ -16,7 +16,7 @@ var ColorZones = function (renderer, timeZoneService, colorPicker) {
   self.width = ko.observable(width + 'px');
   self.height = ko.observable(height + 'px');
   self.zoom = ko.observable(1);
-  self.centerLat = ko.observable(0);
+  self.centerLat = ko.observable(20);
   self.centerLng = ko.observable(0);
   // Cached zones and regions
   self.timeZones = ko.observableArray();

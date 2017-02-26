@@ -19,6 +19,7 @@
   <script src="js/colorPicker.js"></script>
   <script src="js/renderer.js"></script>
   <script src="js/timeZoneService.js"></script>
+  <script src="js/tooltipService.js"></script>
   <script src="js/models/latLng.js"></script>
   <script src="js/models/timeZone.js"></script>
   <script src="js/models/polygon.js"></script>
@@ -35,30 +36,41 @@
       // Figure out why I need this override here...
       ko.options.useOnlyNativeEvents = true;
       ko.applyBindings(model);
+
+      var tooltipService = new TooltipService([
+        { id: $('#canvasContainer'), timeout: 8 },
+        { id: $('#hoursControl'), timeout: 3 },
+        { id: $('#minutesControl'), timeout: 3 },
+        { id: $('#secondsControl'), timeout: 3 },
+        { id: $('#opacityControl'), timeout: 4 },
+        { id: $('#showTimesControl'), timeout: 6 },
+        { id: $('#showColorsControl'), timeout: 6 }
+      ]);
+      tooltipService.loadToolips();
     });
   </script>
 
-  <div id="main">
+  <div id="main" class="container-fluid">
     <div id="content" class="mx-auto d-block" data-bind="style: {width: width}">
-      <div id="canvasContainer" class="mb-2">
+      <div id="canvasContainer" class="mb-2" data-animation="false" data-placement="bottom" title="The regions on the map will be colored with a hex based on the current time in their time zone.">
         <canvas id="theCanvas" data-bind="attr: {width: width, height: height}"></canvas>
       </div>
 
       <div class="mb-2">
         <div class="row text-white">
           <div class="col">
-            <div class="float-right">
+            <div class="float-right" id="opacityControl" data-animation="false" data-placement="top" title="You can choose the opacity of the time zone colors.">
               <label for="opacitySlider">Opacity <span data-bind="text: opacity"></span>%</label>
               <input id="opacitySlider" type="range" min="0" max="100" data-bind="value: opacity"/>
             </div>
           </div>
           <div class="col">
-            <label class="custom-control custom-checkbox no-select">
+            <label class="custom-control custom-checkbox no-select" id="showTimesControl" data-animation="false" data-placement="top" title="Choose this to switch between showing the times for every time zone, or to show the time of the zone you are hovering over.">
               <input type="checkbox" class="custom-control-input" data-bind="checked: showTimes">
               <span class="custom-control-indicator"></span>
               <span class="custom-control-description">Show all times</span>
             </label>
-            <label class="custom-control custom-checkbox no-select">
+            <label class="custom-control custom-checkbox no-select" id="showColorsControl" data-animation="false" data-placement="top" title="Choose this to show every time zone and their current color, or to show just the current color of the zone you are hovering over.">
               <input type="checkbox" class="custom-control-input" data-bind="checked: colorAllZones">
               <span class="custom-control-indicator"></span>
               <span class="custom-control-description">Color all zones</span>
@@ -71,7 +83,7 @@
       <div id="colorControl" class="text-uppercase" style="display: none;" data-bind="with: colorPicker, visible: true"
       role="tablist" aria-multiselectable="true">
         <div class="row">
-          <span class="col">
+          <span class="col" id="hoursControl" data-animation="false" data-placement="top" title="Choose the color updated by the hour...">
             <a data-toggle="collapse" class="btn btn-block" data-bind="css: hoursColor"
             data-parent="#colorControl" href="#hoursContainer" aria-expanded="true" aria-controls="hoursContainer">Hours</a>
 
@@ -84,7 +96,7 @@
             </div>
           </span>
 
-          <span class="col">
+          <span class="col" id="minutesControl" data-animation="false" data-placement="top" title="And the color updated by the minute...">
             <a data-toggle="collapse" class="btn btn-block" data-bind="css: minutesColor"
             data-parent="#colorControl" href="#minutesContainer" aria-expanded="true" aria-controls="minutesContainer">Minutes</a>
 
@@ -97,7 +109,7 @@
             </div>
           </span>
 
-          <span class="col">
+          <span class="col" id="secondsControl" data-animation="false" data-placement="top" title="And also the color updated by the second.">
             <a data-toggle="collapse" class="btn btn-block" data-bind="css: secondsColor"
             data-parent="#colorControl" href="#secondsContainer" aria-expanded="true" aria-controls="secondsContainer">Seconds</a>
 
