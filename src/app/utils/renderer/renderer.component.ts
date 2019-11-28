@@ -7,12 +7,12 @@ import Logger from '../../utils/logger';
 @Component({
   selector: 'renderer',
   template: `
-  <div #canvasContainer id="canvasContainer" [ngClass]="{'fixed-canvas': fixedSize, 'text-center': center}">
+  <div #canvasContainer style="height:85vh" id="canvasContainer">
     <canvas #theCanvas id="theCanvas"></canvas>
   </div>`,
   styles: [
-    '.fixed-canvas {overflow: auto}',
-    '#theCanvas {width: 100%}',
+    '#canvasContainer {overflow: auto}',
+    '#theCanvas {display:block}',
   ]
 })
 export class Renderer implements AfterViewInit {
@@ -21,7 +21,6 @@ export class Renderer implements AfterViewInit {
   @Input() fixedHeight: number;
   @Output() render: EventEmitter<Renderer> = new EventEmitter();
   @Output() mouseOver: EventEmitter<Vector> = new EventEmitter();
-  @Input() fixedSize: boolean;
   @Input() center = true;
   @ViewChild('theCanvas', { static: false }) canvasView;
   @ViewChild('canvasContainer', { static: false }) canvasContainer;
@@ -183,11 +182,14 @@ export class Renderer implements AfterViewInit {
     if (this.fixedWidth != null && this.fixedHeight != null) {
       width = this.fixedWidth;
       height = this.fixedHeight;
+
+      // If we have to fix the canvas size, then we need to resize the container to fit the window
+      this.canvasContainer.style.width = window.outerWidth + 'px';
     } else {
       width = this.canvasContainer.clientWidth;
       height = this.canvasContainer.clientHeight;
     }
-    
+
     this.canvas.width = width;
     this.canvas.height = height;
 
