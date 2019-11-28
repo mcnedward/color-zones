@@ -27,6 +27,7 @@ export class AppComponent implements AfterViewInit {
   // Map options
   width = 1200;
   height = 700;
+  copyrightDate: number = new Date().getFullYear();
   private centerLat = 20;
   private centerLng = 0;
   private zoom = 1.3;

@@ -1,45 +1,10 @@
-<div id="colorControl" class="text-uppercase" role="tablist" aria-multiselectable="true">
-    <div class="row">
-        <span class="col" id="hoursControl" data-animation="false" data-placement="top"
-            title="Choose the color updated by the hour...">
-            <a data-toggle="collapse" class="btn btn-block {{hoursColor}}" data-parent="#colorControl"
-                href="#hoursContainer" aria-expanded="true" aria-controls="hoursContainer">Hours</a>
+<div id="colorControl">
+  <time-container [interval]="'hours'" [intervalColor]="hoursColor" [colors]="colors"
+    (colorSelected)="onUpdate($event)"></time-container>
 
-            <div id="hoursContainer" class="collapse" role="tabpanel">
-                <div class="card-block mt-2">
-                    <button class="btn btn-danger btn-block mb-2" (click)="update('hours', 'red')">RED</button>
-                    <button class="btn btn-success btn-block mb-2" (click)="update('hours', 'green')">GREEN</button>
-                    <button class="btn btn-primary btn-block mb-2" (click)="update('hours', 'blue')">BLUE</button>
-                </div>
-            </div>
-        </span>
+  <time-container [interval]="'minutes'" [intervalColor]="minutesColor" [colors]="colors"
+    (colorSelected)="onUpdate($event)"></time-container>
 
-        <span class="col" id="minutesControl" data-animation="false" data-placement="top"
-            title="And the color updated by the minute...">
-            <a data-toggle="collapse" class="btn btn-block {{minutesColor}}" data-parent="#colorControl"
-                href="#minutesContainer" aria-expanded="true" aria-controls="minutesContainer">Minutes</a>
-
-            <div id="minutesContainer" class="collapse" role="tabpanel">
-                <div class="card-block mt-2">
-                    <button class="btn btn-danger btn-block mb-2" (click)="update('minutes', 'red')">RED</button>
-                    <button class="btn btn-success btn-block mb-2" (click)="update('minutes', 'green')">GREEN</button>
-                    <button class="btn btn-primary btn-block mb-2" (click)="update('minutes', 'blue')">BLUE</button>
-                </div>
-            </div>
-        </span>
-
-        <span class="col" id="secondsControl" data-animation="false" data-placement="top"
-            title="And also the color updated by the second.">
-            <a data-toggle="collapse" class="btn btn-block {{secondsColor}}" data-parent="#colorControl"
-                href="#secondsContainer" aria-expanded="true" aria-controls="secondsContainer">Seconds</a>
-
-            <div id="secondsContainer" class="collapse" role="tabpanel">
-                <div class="card-block mt-2">
-                    <button class="btn btn-danger btn-block mb-2" (click)="update('seconds', 'red')">RED</button>
-                    <button class="btn btn-success btn-block mb-2" (click)="update('seconds', 'green')">GREEN</button>
-                    <button class="btn btn-primary btn-block mb-2" (click)="update('seconds', 'blue')">BLUE</button>
-                </div>
-            </div>
-        </span>
-    </div>
+  <time-container [interval]="'seconds'" [intervalColor]="secondsColor" [colors]="colors"
+    (colorSelected)="onUpdate($event)"></time-container>
 </div>

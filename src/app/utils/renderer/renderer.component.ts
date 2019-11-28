@@ -7,7 +7,7 @@ import Logger from '../../utils/logger';
 @Component({
   selector: 'renderer',
   template: `
-  <div #canvasContainer id="canvasContainer" style="height:85vh" [ngClass]="{'fixed-canvas': fixedSize, 'text-center': center}">
+  <div #canvasContainer id="canvasContainer" [ngClass]="{'fixed-canvas': fixedSize, 'text-center': center}">
     <canvas #theCanvas id="theCanvas"></canvas>
   </div>`,
   styles: [

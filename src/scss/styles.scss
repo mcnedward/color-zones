@@ -1,1 +1,118 @@
-/* You can add global styles to this file, and also import other style files */
+@import "colors";
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  min-height: 100vh;
+  font-family: "Titillium Web", sans-serif;
+  background-color: $ghostWhite;
+  color: $black;
+  font-size: 16px;
+}
+
+body {
+  width: inherit;
+  min-height: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+main {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+header {
+  h1 {
+    margin: 0;
+    text-align: center;
+  }
+}
+
+footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: $black;
+
+  span {
+    margin-right: 0.5rem;
+    font-size: 1.2rem;
+  }
+
+  a {
+    color: $black;
+    text-decoration: none;
+  }
+  a:hover {
+    opacity: 0.5;
+  }
+}
+
+input {
+  padding: 0.5rem 0.3rem;
+  line-height: 24px;
+  border: none;
+  border-bottom: 1px solid #51b641;
+  transition: all .3s cubic-bezier(.64,.09,.08,1);
+  border-radius: 0px;
+  box-shadow: none;
+  outline: none;
+  background: linear-gradient(180deg,hsla(0,0%,100%,0) 96%,#51b641 0);
+}
+
+.btn {
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  padding: 0.5rem 0.75rem;
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.25;
+  border: 1px solid transparent;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-green {
+  color: $white;
+  background-color: $green;
+}
+.btn-green:hover {
+  background-color: $darkGreen;
+}
+
+.btn-red {
+  color: $white;
+  background-color: $red;
+}
+.btn-red:hover {
+  background-color: $darkRed;
+}
+
+.btn-blue {
+  color: $white;
+  background-color: $blue;
+}
+.btn-blue:hover {
+  background-color: $darkBlue;
+}
+
+.btn-purple {
+  color: $white;
+  background: $purple;
+}
+.btn-purple:hover {
+  background: $darkPurple;
+}
+
+.btn-gray {
+  color: $white;
+  background: $gray;
+}
+.btn-gray:hover {
+  background: $darkGray;
+}

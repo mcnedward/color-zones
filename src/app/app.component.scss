@@ -1,61 +1,17 @@
 @import '../scss/colors';
 
-main {
-  display: flex;
-  min-height: 100vh;
-  flex-direction: column;
-}
-
-header {
-  h1 {
-    margin: 0;
-    text-align: center;
-  }
-}
-
-#left {
+#colorZones {
   margin: 0 auto;
 }
 
-#right {
+.controls-container {
   display: flex;
-  flex-wrap: wrap-reverse;
-}
-
-.card-container {
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-
-  orbital-card {
-    width: 300px;
-    display: flex;
-    margin: 0 10px;
-  }
-}
-.button-container {
-  flex-grow: 1;
-  margin: 0 5px;
-}
-
-footer {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  color: $white;
-
-  span {
-    margin-right: 0.5rem;
-    font-size: 1.2rem;
-  }
-
-  a {
-    color: $white;
-    text-decoration: none;
-  }
-  a:hover {
-    opacity: 0.5;
-  }
+  justify-content: space-evenly;
+}
+.opacity-control {
+  display: flex;
+  align-items: center;
 }
 
 .btn-solar {
