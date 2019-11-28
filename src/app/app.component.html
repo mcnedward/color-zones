@@ -1,0 +1,39 @@
+<main>
+  <header>
+    <h1>Color Zones</h1>
+  </header>
+
+  <div id="colorZones">
+    <renderer [(fixedWidth)]="width" [(fixedHeight)]="height" (render)="doRender($event)" (mouseOver)="onMouseOver($event)"></renderer>
+
+    <div class="row">
+      <div class="col">
+        <div class="float-right" id="opacityControl">
+          <label for="opacitySlider">Opacity {{opacity}}%</label>
+          <input id="opacitySlider" type="range" min="0" max="100" [(ngModel)]="opacity"
+            (ngModelChange)="updateOpacity($event)" />
+        </div>
+      </div>
+      <div class="col">
+        <label class="custom-control custom-checkbox no-select" id="showTimesControl">
+          <input type="checkbox" class="custom-control-input" [(ngModel)]="showTimes">
+          <span class="custom-control-indicator"></span>
+          <span class="custom-control-description">Show all times</span>
+        </label>
+        <label class="custom-control custom-checkbox no-select" id="showColorsControl">
+          <input type="checkbox" class="custom-control-input" [(ngModel)]="colorAllZones">
+          <span class="custom-control-indicator"></span>
+          <span class="custom-control-description">Color all zones</span>
+        </label>
+      </div>
+    </div>
+
+    <color-picker></color-picker>
+  </div>
+
+  <footer>
+    <span><a href="https://github.com/mcnedward/solar-system"><i class="fab fa-github"></i></a></span>
+    <span><a href="https://www.linkedin.com/in/mcnedward"><i class="fab fa-linkedin"></i></a></span>
+    <label><a href="https://edwardmcnealy.com">&copy; Edward McNealy {{copyrightDate}}</a></label>
+  </footer>
+</main>
