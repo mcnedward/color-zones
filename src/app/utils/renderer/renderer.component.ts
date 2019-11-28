@@ -45,6 +45,10 @@ export class Renderer implements AfterViewInit {
     this.canvasContainer = document.getElementById('canvasContainer');
     this.context = this.canvas.getContext('2d');
 
+    if (this.center) {
+      this.canvas.style.margin = '0 auto';
+    }
+
     this.resizeCanvas();
     this.renderLoop();
   }
@@ -184,7 +188,7 @@ export class Renderer implements AfterViewInit {
       height = this.fixedHeight;
 
       // If we have to fix the canvas size, then we need to resize the container to fit the window
-      this.canvasContainer.style.width = window.outerWidth + 'px';
+      this.canvasContainer.style.width = (window.outerWidth) + 'px';
     } else {
       width = this.canvasContainer.clientWidth;
       height = this.canvasContainer.clientHeight;

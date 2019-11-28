@@ -8,21 +8,10 @@
   display: flex;
   align-items: center;
   justify-content: space-evenly;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
 .opacity-control {
   display: flex;
   align-items: center;
-}
-
-.btn-solar {
-  display: block;
-  width: 100%;
-  max-width: 600px;
-  margin-right: auto;
-  margin-left: auto;
-  margin-bottom: 1rem;
-  text-decoration: none;
-  border: none;
-  border-radius: 1;
-  cursor: pointer;
 }
